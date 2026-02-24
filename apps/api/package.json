@@ -25,6 +25,7 @@
     "@nestjs/platform-socket.io": "^11.1.14",
     "@nestjs/websockets": "^11.1.14",
     "birpc": "^4.0.0",
+    "mqtt": "^5.15.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "smartmeter-obis": "^4.0.0"

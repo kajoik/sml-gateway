@@ -6,5 +6,6 @@ import { SmlStreamGateway } from "./sml-stream.gateway";
 @Module({
   providers: [SmlStreamService, SmlStreamGateway],
   controllers: [SmlStreamController],
+  exports: [SmlStreamService],
 })
 export class SMLStreamModule {}
