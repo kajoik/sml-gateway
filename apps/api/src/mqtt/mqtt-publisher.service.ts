@@ -21,28 +21,31 @@ export class MqttPublisherService implements OnModuleInit, OnModuleDestroy {
     const cfg = await this.settingsService.getMqttConfig();
     this.applyConfig(cfg);
 
-    // react to future config changes if available
     if (this.settingsService.mqttConfig$) {
       this.configSub = this.settingsService.mqttConfig$.subscribe((newCfg) =>
         this.applyConfig(newCfg),
       );
     }
 
-    // batch stream updates to avoid flooding
-    this.streamSub = this.smlStreamService.stream$.subscribe((batches) => {
-      const payload = JSON.stringify(batches.flat());
+    this.streamSub = this.smlStreamService.stream$.subscribe((obisEntries) => {
       if (!this.client || !this.client.connected) {
-        // optionally buffer or drop until connected
         return;
       }
-      try {
-        this.client.publish(
-          this.currentConfig!.topic ?? "sml/samples",
-          payload,
-          { qos: 0 },
-        );
-      } catch (err) {
-        console.error("MQTT publish error", err);
+      const currentTotalPower = obisEntries.find(
+        ({ obisId }) => obisId === "1-0:1.7.0*255",
+      )?.values[0]?.value;
+      if (currentTotalPower !== undefined) {
+        try {
+          this.client.publish(
+            "homeassistant/device/test123/state",
+            currentTotalPower.toString(),
+            {
+              qos: 0,
+            },
+          );
+        } catch (err) {
+          console.error("MQTT publish error", err);
+        }
       }
     });
   }
@@ -66,6 +69,37 @@ export class MqttPublisherService implements OnModuleInit, OnModuleDestroy {
     );
     this.client.on("connect", () => {
       console.info("MQTT connected to", currentConfig.url);
+      this.client?.publish(
+        "homeassistant/device/test123/config",
+        JSON.stringify({
+          dev: {
+            ids: "ea334450945af",
+            name: "Kitchen",
+            mf: "Bla electronics",
+            mdl: "xya",
+            sw: "1.0",
+            sn: "ea334450945afc",
+            hw: "1.0rev2",
+          },
+          o: {
+            name: "bla2mqtt",
+            sw: "2.1",
+            url: "https://bla2mqtt.example.com/support",
+          },
+          cmps: {
+            some_unique_component_id16: {
+              p: "sensor",
+              device_class: "power",
+              unit_of_measurement: "W",
+              unique_id: "pwr_12345",
+              state_topic: "homeassistant/device/test123/state",
+            },
+          },
+        }),
+        {
+          qos: 1,
+        },
+      );
     });
     this.client.on("reconnect", () => {
       console.info("MQTT reconnecting", currentConfig.url);
