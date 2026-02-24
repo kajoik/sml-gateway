@@ -3,16 +3,17 @@ import { createBirpc } from "birpc";
 import { fork, ChildProcess } from "child_process";
 import { join } from "path";
 import { ReplaySubject } from "rxjs";
+import { ObisEntry } from "./lib/ObisEntry";
 
 export type ParentFunctions = {
-  send: (msg: { ts: number; value: number; source: "random" }) => void;
+  send: (msg: { ts: number; obisEntries: ObisEntry[] }) => void;
 };
 
 @Injectable()
 export class SmlStreamService implements OnModuleInit, OnModuleDestroy {
   private child?: ChildProcess;
-  private stream = new ReplaySubject<number>(1);
-  private lastValue?: number;
+  private stream = new ReplaySubject<ObisEntry[]>(1);
+  private lastValue?: ObisEntry[];
   stream$ = this.stream.asObservable();
 
   onModuleInit() {
@@ -20,9 +21,9 @@ export class SmlStreamService implements OnModuleInit, OnModuleDestroy {
     this.child = child;
     const parentFunctions: ParentFunctions = {
       send: (msg) => {
-        const { value } = msg;
-        this.stream.next(value);
-        this.lastValue = value;
+        const { obisEntries } = msg;
+        this.stream.next(obisEntries);
+        this.lastValue = obisEntries;
       },
     };
     createBirpc(parentFunctions, {
