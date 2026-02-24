@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { createBirpc } from "birpc";
 import { fork, ChildProcess } from "child_process";
 import { join } from "path";
-import { Subject } from "rxjs";
+import { ReplaySubject } from "rxjs";
 
 export type ParentFunctions = {
   send: (msg: { ts: number; value: number; source: "random" }) => void;
@@ -11,7 +11,7 @@ export type ParentFunctions = {
 @Injectable()
 export class SmlStreamService implements OnModuleInit, OnModuleDestroy {
   private child?: ChildProcess;
-  private stream = new Subject<number>();
+  private stream = new ReplaySubject<number>(1);
   private lastValue?: number;
   stream$ = this.stream.asObservable();
 
