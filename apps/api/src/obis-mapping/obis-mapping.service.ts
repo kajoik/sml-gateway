@@ -11,7 +11,7 @@ import {
 import { ObisMapping, IObisMapping } from "./entities/obis-mapping.entity";
 import { v4 as uuid } from "uuid";
 
-interface CreateObisMappingInput extends Omit<
+export interface CreateObisMappingInput extends Omit<
   IObisMapping,
   "id" | "createdAt" | "updatedAt" | "version"
 > {}
